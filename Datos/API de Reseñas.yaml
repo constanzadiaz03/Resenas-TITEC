@@ -1,0 +1,339 @@
+openapi: 3.0.3
+info:
+  title: API de Reseñas
+  description: |
+    API correspondiente al modulo de Reseñas.
+
+    El modulo permite:
+    - Crear reseñas de eventos.
+    - Consultar reseñas de un evento.
+    - Modificar reseñas.
+    - Eliminar reseñas.
+    - Obtener el promedio de clasificacion de un evento.
+    - Obtener la cantidad total de reseñas de un evento.
+
+    Integracion con otros modulos:
+
+    Catalogo:
+    - Proporciona el Id_evento para identificar el evento.
+    - Consulta el resumen de reseñas para mostrar el promedio
+      y cantidad de reseñas en la informacion del evento.
+    - Cuando el usuario selecciona "Ver reseñas", consulta
+      las reseñas correspondientes a ese evento.
+
+    Check-in:
+    - Proporciona informacion para verificar que un usuario
+      asistio al evento antes de permitirle crear una reseña.
+  version: 1.0.0
+servers:
+  - url: https://virtserver.swaggerhub.com/university-645-9f5/TITEC/1.0.0
+    description: SwaggerHub API Auto Mocking
+  - url: http://localhost:5000/api
+    description: Servidor local
+tags:
+  - name: Reseñas
+    description: Operaciones relacionadas con reseñas de eventos
+paths:
+  /resenas:
+    post:
+      tags:
+        - Reseñas
+      summary: Crear una reseña
+      description: |
+        Crea una nueva reseña para un evento.
+
+        Para crear una reseña se debe verificar:
+        - Que el usuario exista.
+        - Que el evento exista.
+        - Que el usuario haya asistido al evento mediante Check-in.
+        - Que el usuario no tenga otra reseña para el mismo evento.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearResena'
+        required: true
+      responses:
+        '201':
+          description: Reseña creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resena'
+        '400':
+          description: Datos invalidos
+        '403':
+          description: El usuario no asistio al evento
+        '404':
+          description: Usuario o evento no encontrado
+        '409':
+          description: El usuario ya realizo una reseña para este evento
+  /resenas/{numResena}:
+    get:
+      tags:
+        - Reseñas
+      summary: Obtener una reseña especifica
+      description: Obtiene una reseña mediante su identificador.
+      parameters:
+        - name: numResena
+          in: path
+          description: Identificador unico de la reseña.
+          required: true
+          schema:
+            type: integer
+            example: 101
+      responses:
+        '200':
+          description: Reseña encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resena'
+        '404':
+          description: Reseña no encontrada
+    put:
+      tags:
+        - Reseñas
+      summary: Modificar una reseña
+      description: |
+        Permite modificar la clasificacion y/o descripcion
+        de una reseña existente.
+      parameters:
+        - name: numResena
+          in: path
+          description: Identificador unico de la reseña.
+          required: true
+          schema:
+            type: integer
+            example: 101
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificarResena'
+        required: true
+      responses:
+        '200':
+          description: Reseña modificada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resena'
+        '400':
+          description: Datos invalidos
+        '403':
+          description: El usuario no tiene permiso para modificar esta reseña
+        '404':
+          description: Reseña no encontrada
+    delete:
+      tags:
+        - Reseñas
+      summary: Eliminar una reseña
+      description: Elimina una reseña existente.
+      parameters:
+        - name: numResena
+          in: path
+          description: Identificador unico de la reseña.
+          required: true
+          schema:
+            type: integer
+            example: 101
+      responses:
+        '204':
+          description: Reseña eliminada correctamente
+        '403':
+          description: El usuario no tiene permiso para eliminar esta reseña
+        '404':
+          description: Reseña no encontrada
+  /eventos/{idEvento}/resumen-resenas:
+    get:
+      tags:
+        - Reseñas
+      summary: Obtener resumen de reseñas de un evento
+      description: |
+        Devuelve la informacion resumida de las reseñas de un evento.
+
+        Esta informacion es utilizada por el modulo Catalogo
+        para mostrar la clasificacion promedio y la cantidad
+        total de reseñas junto a la informacion del evento.
+
+        Ejemplo de visualizacion:
+
+        4.5 (128 reseñas)
+      parameters:
+        - name: idEvento
+          in: path
+          description: Identificador del evento.
+          required: true
+          schema:
+            type: integer
+            example: 25
+      responses:
+        '200':
+          description: Resumen de reseñas obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenResenas'
+        '404':
+          description: Evento sin reseñas o evento no encontrado
+  /eventos/{idEvento}/resenas:
+    get:
+      tags:
+        - Reseñas
+      summary: Obtener reseñas de un evento
+      description: |
+        Devuelve todas las reseñas asociadas a un evento.
+
+        Este endpoint es utilizado cuando el usuario selecciona
+        la opcion "Ver reseñas" desde el modulo Catalogo.
+
+        Ademas de las reseñas individuales, se devuelve el
+        promedio y la cantidad total de reseñas.
+      parameters:
+        - name: idEvento
+          in: path
+          description: Identificador del evento.
+          required: true
+          schema:
+            type: integer
+            example: 25
+      responses:
+        '200':
+          description: Reseñas del evento obtenidas correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleResenas'
+        '404':
+          description: Evento no encontrado
+components:
+  schemas:
+    CrearResena:
+      required:
+        - clasificacion
+        - descripcion
+        - id_evento
+        - id_usuario
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+          description: |
+            Identificador del usuario.
+            Se utiliza junto con Check-in para verificar
+            la asistencia al evento.
+          example: 58
+        id_evento:
+          type: integer
+          description: |
+            Identificador del evento obtenido desde Catalogo.
+          example: 25
+        clasificacion:
+          maximum: 5
+          minimum: 1
+          type: integer
+          description: |
+            Clasificacion otorgada al evento.
+            El valor debe estar entre 1 y 5.
+          example: 5
+        descripcion:
+          maxLength: 1000
+          minLength: 1
+          type: string
+          description: Comentario realizado por el usuario.
+          example: Excelente evento, muy buena organizacion.
+    ModificarResena:
+      type: object
+      properties:
+        clasificacion:
+          maximum: 5
+          minimum: 1
+          type: integer
+          description: Nueva clasificacion de la reseña.
+          example: 4
+        descripcion:
+          maxLength: 1000
+          minLength: 1
+          type: string
+          description: Nueva descripcion de la reseña.
+          example: El evento estuvo muy bueno.
+    Resena:
+      type: object
+      properties:
+        num_reseña:
+          type: integer
+          description: Identificador unico de la reseña.
+          example: 101
+        clasificacion:
+          maximum: 5
+          minimum: 1
+          type: integer
+          description: Clasificacion otorgada al evento.
+          example: 4
+        descripcion:
+          type: string
+          description: Comentario realizado por el usuario.
+          example: Excelente evento, muy buena organizacion.
+        id_evento:
+          type: integer
+          description: Identificador del evento.
+          example: 25
+        id_usuario:
+          type: integer
+          description: Identificador del usuario.
+          example: 58
+        nombre_usuario:
+          type: string
+          description: Nombre del usuario obtenido desde Check-in.
+          example: Juan Perez
+    ResumenResenas:
+      type: object
+      properties:
+        id_evento:
+          type: integer
+          description: Identificador del evento.
+          example: 25
+        promedio:
+          maximum: 5
+          minimum: 0
+          type: number
+          description: |
+            Promedio de todas las clasificaciones realizadas
+            para el evento.
+          format: float
+          example: 4.5
+        total_reseñas:
+          minimum: 0
+          type: integer
+          description: Cantidad total de reseñas del evento.
+          example: 128
+    DetalleResenas:
+      type: object
+      properties:
+        id_evento:
+          type: integer
+          description: Identificador del evento.
+          example: 25
+        promedio:
+          maximum: 5
+          minimum: 0
+          type: number
+          description: |
+            Promedio de todas las clasificaciones del evento.
+          format: float
+          example: 4.5
+        reseñas:
+          type: array
+          description: Lista de reseñas del evento.
+          items:
+            $ref: '#/components/schemas/Resena'
+  parameters:
+    NumResena:
+      name: numResena
+      in: path
+      description: Identificador unico de la reseña.
+      required: true
+      schema:
+        type: integer
+        example: 101
