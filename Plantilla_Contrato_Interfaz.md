@@ -1,10 +1,12 @@
 # Contrato de interfaz: [Equipo A] ↔ [Equipo B]
 
 **Versión:** 1.0
-**Estado:** Propuesto / Aprobado
+
 **Equipo consumidor:** [Nombre del equipo que usa la información]
+
 **Equipo proveedor:** [Nombre del equipo que entrega la información]
-**Basado en:** [Historia de usuario o diagrama relacionado]
+
+**Basado en:** [Historia de usuario o diagrama relacionado] (opcional)
 
 ---
 
@@ -101,7 +103,7 @@ Equipo [Consumidor], en el momento en que [describir el momento/disparador].
 
 ---
 
-## 6. Pendientes a acordar
+## 6. Pendientes a acordar (OPCIONAL PREVIO ACUERDO)
 
 - [ ] Confirmar protocolo (REST vs evento asíncrono vs gRPC).
 - [ ] Confirmar nombre exacto del endpoint y autenticación.
