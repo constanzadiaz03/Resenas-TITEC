@@ -1,4 +1,4 @@
 # Resenas-TITEC
-TITEC GRUPO 4 RESEÑAS ARCHIVOS
+TITEC GRUPO 6 RESEÑAS ARCHIVOS
 Repositorio de respaldo de archivos 
 xsiaca XD
